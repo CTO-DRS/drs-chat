@@ -1,20 +1,14 @@
 # ADR Index — drs chat
 
-ADRs follow the format: Context → Decision → Alternatives → Consequences.
-Status lifecycle: Proposed (planning gate) → Accepted (when its milestone's tests go green) → Superseded.
+ADRs follow: Context → Decision → Alternatives → Consequences.
+Status: Proposed → Accepted (when its milestone's tests go green) → Superseded.
 
-| # | Title | Status | Notes |
-|---|-------|--------|-------|
-| [0001](./ADR-0001-wire-envelope-format.md) | Wire envelope format v1 (CBOR, signed header, field semantics) | Proposed | Drafted at M1. Required by spec |
-| [0002](./ADR-0002-transport-abstraction.md) | Transport abstraction (byte pipes, keyId routing, manager placement) | Proposed | Drafted at M1. Required by spec |
-| [0003](./ADR-0003-key-generation-and-storage.md) | Identity keys, fingerprint, and key storage (Keystore vault + SQLCipher) | Proposed | Drafted at M1. Required by spec |
-
-Planned (drafted with the milestone that implements them):
-
-| # | Title | Planned milestone |
-|---|-------|-------------------|
-| 0004 | Relay trust model & signed-challenge auth (incl. why the server stays key-opaque) | M3 |
-| 0005 | Invite format: QR/share-link CBOR bundle + 256-word list source | M2 |
-| 0006 | Monorepo build layout: two Gradle builds, version catalogs | M2 |
-| 0007 | Receipt & message status semantics (QUEUED/SENT/DELIVERED/READ) | M3 |
-| 0008 | Outbox state machine & retry/backoff policy | M3 |
+| # | Title | Status |
+|---|-------|--------|
+| [0001](./ADR-0001-wire-envelope-format.md) | Wire envelope v1 (CBOR; messageId; definite-length + byte-string) | Accepted (M2/M3) |
+| [0002](./ADR-0002-transport-abstraction.md) | Transport abstraction (byte pipes, keyId routing) | Accepted |
+| [0003](./ADR-0003-key-generation-and-storage.md) | Identity/fingerprint/storage (vault; no user-auth binding; PQ Kyber) | Accepted (M2/M3) |
+| [0006](./ADR-0006-deferred-instrumented-session-tests.md) | Instrumented on-device session tests deferred to M4 (deviation) | Accepted (M3) — **[PRUNED from repo; to be re-committed on rebuild]** |
+| [0007](./ADR-0007-receipts-and-status-semantics.md) | Receipts originate from recipient session; kind-space | Accepted (M3) — **[PRUNED; kind numbering SUPERSEDED by ADR-0009]** |
+| [0008](./ADR-0008-relay-trust-model-and-protocol.md) | Relay signed-challenge auth; AUTH binds x25519Pub | Accepted (M3) — **[PRUNED; to be re-committed]** |
+| [0009](./ADR-0009-baseline-adjudication-and-frozen-kind-table.md) | **Baseline adjudication (152-test spec) + frozen kind table (4=READ/5=DELIVERED) + per-module push policy** | Accepted (2026-10-16, owner adjudication) |

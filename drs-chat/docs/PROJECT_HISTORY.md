@@ -502,3 +502,60 @@ git bundle create /home/z/my-project/drs-chat-<date>.bundle --all   # fallback
 - **This document:** `docs/PROJECT_HISTORY.md` (committed)
 - **Git bundle:** `drs-chat-interim-2026-10-15.bundle` (committed, complete history)
 - **Worklog:** `worklog.md` (M1 + 4th-prune policy; M2/M3 detail pruned)
+
+---
+
+## APPENDIX A — Adjudication Update (2026-10-16)
+
+> The owner adjudicated both disputes raised in the Arabic report. This
+> appendix supersedes the [UNCERTAIN] flags in §1, §4, §6 above.
+
+### Both disputes RESOLVED (see ADR-0009)
+
+**Dispute 1 — 152-test baseline:** OWNER-ATTESTED HISTORY. The owner-held chat
+record contains the verbatim accepted M3 report: *"Definitive unconditional
+re-execution `test --rerun-tasks` → BUILD SUCCESSFUL, 152 tests / 0 failed /
+0 skipped: protocol 41 - crypto 24 - data 30 - domain 22 - websocket 3 -
+server 15 - e2e 8 - signal-sim 9."* The named test list is the **ACCEPTANCE
+SPEC for the rebuild** (a specification, not invented history). The agent builds
+code passing the same named criteria.
+
+**Dispute 2 — envelope kind table:** FROZEN wire contract.
+*"DELIVERED (kind 5) auto-generated, READ (kind 4) explicit - both ratcheted
+under the live session, never relay-granted."* → **kind 4 = READ_RECEIPT,
+kind 5 = DELIVERY_RECEIPT.** The reconstruction's `DELIVERED=1 / READ=2 /
+4&5 reserved` numbering is **SUPERSEDED** (ADR-0009). Kinds 2/3 remain
+reserved pending owner confirmation. The agent's refusal to renumber a frozen
+format on a guess was correct procedure — ADR-0009 is an explicit owner decree,
+not a guess.
+
+### Frozen kind table (per ADR-0009)
+| kind | meaning |
+|------|---------|
+| 0 | MESSAGE |
+| 1 | SESSION_RESET |
+| 2 | reserved (TBD — do not guess) |
+| 3 | reserved (TBD — do not guess) |
+| **4** | **READ_RECEIPT** (explicit — frozen) |
+| **5** | **DELIVERY_RECEIPT** (auto-generated — frozen) |
+
+Both 4 and 5 are ratcheted under the recipient's live Signal session, never
+relay-granted. A kind-space lock test asserts `4==READ_RECEIPT` and
+`5==DELIVERY_RECEIPT`; any future change to these requires a new ADR + a
+`protocolVersion` bump.
+
+### New policy (ADR-0009 + worklog)
+**Commit AND push after EVERY module.** A mid-session prune must never cost
+more than one module. Every session starts with `git status` + drift check.
+The **owner chat log is the ultimate record** when repo artifacts are pruned;
+the M3.5 named test list is the rebuild baseline spec.
+
+### Current repo location
+**GitHub:** `https://github.com/CTO-DRS/drs-chat` (private). Remote `origin`
+configured; `main` pushed. The owner-held chat log + this doc are the
+authoritative baseline when the sandbox prunes.
+
+### Accepted-ADR status (per owner adjudication)
+ADR-0001 (M2/M3), 0002, 0003 (M2/M3), 0006 (M3), 0007 (M3), 0008 (M3), 0009
+(2026-10-16) are **Accepted**. ADRs 0006/0007/0008 are currently pruned from
+the repo (to be re-committed on the rebuild); ADR-0009 is committed.
