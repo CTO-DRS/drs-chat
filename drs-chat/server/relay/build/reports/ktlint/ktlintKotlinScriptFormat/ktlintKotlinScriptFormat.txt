@@ -1,0 +1,8 @@
+[90m/home/z/my-project/drs-chat/server/relay/[0mbuild.gradle.kts[90m:[0m1[90m:11:[0m Missing newline after '{' [90m(standard:statement-wrapping)[0m
+[90m/home/z/my-project/drs-chat/server/relay/[0mbuild.gradle.kts[90m:[0m1[90m:45:[0m Unnecessary semicolon [90m(standard:no-semi)[0m
+[90m/home/z/my-project/drs-chat/server/relay/[0mbuild.gradle.kts[90m:[0m1[90m:46:[0m Missing newline after ';' [90m(standard:statement-wrapping)[0m
+[90m/home/z/my-project/drs-chat/server/relay/[0mbuild.gradle.kts[90m:[0m2[90m:3:[0m Missing newline before '}' [90m(standard:statement-wrapping)[0m
+
+Summary error count (descending) by rule:
+  standard:statement-wrapping: 3
+  standard:no-semi: 1

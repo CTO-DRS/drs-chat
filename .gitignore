@@ -1,2 +1,8 @@
 skills/
 node_modules/
+.tools/
+*.tar.gz
+*.zip
+drs-chat-interim-*.bundle
+download/
+upload/

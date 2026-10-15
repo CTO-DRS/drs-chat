@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="drs.chat.protocol.WordListTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-15T23:46:59" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.012">
+  <properties/>
+  <testcase name="all entries are short, non-blank, lowercase()" classname="drs.chat.protocol.WordListTest" time="0.001"/>
+  <testcase name="wordFor byte is a bijection with LIST()" classname="drs.chat.protocol.WordListTest" time="0.001"/>
+  <testcase name="has exactly 256 entries()" classname="drs.chat.protocol.WordListTest" time="0.005"/>
+  <testcase name="all entries are distinct()" classname="drs.chat.protocol.WordListTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

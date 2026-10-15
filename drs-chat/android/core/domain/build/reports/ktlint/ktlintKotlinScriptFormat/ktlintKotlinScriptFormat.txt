@@ -1,0 +1,10 @@
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m1[90m:1:[0m Missing newline before '}' [90m(standard:statement-wrapping)[0m
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m2[90m:16:[0m Missing newline after '{' [90m(standard:statement-wrapping)[0m
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m2[90m:53:[0m Unnecessary semicolon [90m(standard:no-semi)[0m
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m2[90m:54:[0m Missing newline after ';' [90m(standard:statement-wrapping)[0m
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m2[90m:106:[0m Unnecessary semicolon [90m(standard:no-semi)[0m
+[90m/home/z/my-project/drs-chat/android/core/domain/[0mbuild.gradle.kts[90m:[0m2[90m:108:[0m Missing newline after ';' [90m(standard:statement-wrapping)[0m
+
+Summary error count (descending) by rule:
+  standard:statement-wrapping: 4
+  standard:no-semi: 2

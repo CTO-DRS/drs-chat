@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="drs.chat.protocol.WireEnvelopeTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-15T23:46:58" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.338">
+  <properties/>
+  <testcase name="unknown kind code 6 is rejected()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.016"/>
+  <testcase name="envelope built by EnvelopeFactory verifies()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.229"/>
+  <testcase name="kind 5 is DELIVERY_RECEIPT (frozen by ADR-0009)()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="envelope round-trips through CBOR()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="headerBytesOf identical from envelope or bare header()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="tampering senderKeyId breaks verification()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.005"/>
+  <testcase name="golden vector is programmatic — determinism + size lock()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.004"/>
+  <testcase name="isExpired respects ttl and clock skew()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.006"/>
+  <testcase name="kind 0 is MESSAGE, kind 1 is SESSION_RESET()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.001"/>
+  <testcase name="oversized envelope throws()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.003"/>
+  <testcase name="encode is deterministic()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="encode decode encode is stable()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.001"/>
+  <testcase name="tampering the signature breaks verification()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="unsupported protocolVersion is rejected at construction()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.001"/>
+  <testcase name="kind 4 is READ_RECEIPT (frozen by ADR-0009)()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.002"/>
+  <testcase name="messageId is inside the signed scope (amendment proof)()" classname="drs.chat.protocol.WireEnvelopeTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
