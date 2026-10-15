@@ -170,53 +170,25 @@
 
 <div>
   <ul>
-    <li>1,015 lines of code (loc)</li>
-    <li>834 source lines of code (sloc)</li>
-    <li>653 logical lines of code (lloc)</li>
+    <li>1,019 lines of code (loc)</li>
+    <li>838 source lines of code (sloc)</li>
+    <li>656 logical lines of code (lloc)</li>
     <li>40 comment lines of code (cloc)</li>
     <li>166 cyclomatic complexity (mcc)</li>
     <li>45 cognitive complexity</li>
-    <li>2 number of total code smells</li>
+    <li>0 number of total code smells</li>
     <li>4% comment source ratio</li>
-    <li>254 mcc per 1,000 lloc</li>
-    <li>3 code smells per 1,000 lloc</li>
+    <li>253 mcc per 1,000 lloc</li>
+    <li>0 code smells per 1,000 lloc</li>
   </ul>
 </div>
 
 
 <h2>Findings</h2>
-<div>Total: 2
-  <h3>style: 2</h3>
-  <details id="MaxLineLength" open="open">
-    <summary class="rule-container"><span class="rule">MaxLineLength: 2 </span><span class="description">Line detected, which is longer than the defined maximum line length in the code style.</span></summary>
-<a href="https://detekt.dev/docs/rules/style#maxlinelength">Documentation</a>
-    <ul>
-      <li><span class="location">/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/EnvelopeCodec.kt:77:1</span><span class="message">Line detected, which is longer than the defined maximum line length in the code style.</span>
-        <pre><code><span class="lineno">  74 </span>                payloadCiphertext,
-<span class="lineno">  75 </span>            )
-<span class="lineno">  76 </span>        val sig = crypto.signEnvelopeHeader(EnvelopeCodec.headerBytesOf(h))
-<span class="lineno">  77 </span><span class="error">        return WireEnvelope(h.protocolVersion, h.messageId, h.senderKeyId, h.recipientKeyId, h.createdAt, h.ttlSeconds, h.kind, h.payloadCiphertext, sig)</span>
-<span class="lineno">  78 </span>    }
-<span class="lineno">  79 </span>}
-<span class="lineno">  80 </span>
-</code></pre>
-      </li>
-      <li><span class="location">/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/InnerPayload.kt:42:1</span><span class="message">Line detected, which is longer than the defined maximum line length in the code style.</span>
-        <pre><code><span class="lineno">  39 </span>    }
-<span class="lineno">  40 </span>
-<span class="lineno">  41 </span>    override fun equals(other: Any?): Boolean =
-<span class="lineno">  42 </span><span class="error">        this === other || (other is InnerReceipt &amp;&amp; ackedMessageId.contentEquals(other.ackedMessageId) &amp;&amp; acknowledgedAt == other.acknowledgedAt)</span>
-<span class="lineno">  43 </span>
-<span class="lineno">  44 </span>    override fun hashCode(): Int {
-<span class="lineno">  45 </span>        var r = ackedMessageId.contentHashCode()
-</code></pre>
-      </li>
-    </ul>
-  </details>
-</div>
+<div>Total: 0</div>
 
 
-generated with <a href="https://detekt.dev/">detekt version 1.23.7</a> on 2026-10-15 23:51:25 UTC.
+generated with <a href="https://detekt.dev/">detekt version 1.23.7</a> on 2026-10-15 23:53:40 UTC.
 
 </body>
 </html>

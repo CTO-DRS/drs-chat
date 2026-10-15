@@ -39,7 +39,8 @@ data class InnerReceipt(
     }
 
     override fun equals(other: Any?): Boolean =
-        this === other || (other is InnerReceipt && ackedMessageId.contentEquals(other.ackedMessageId) && acknowledgedAt == other.acknowledgedAt)
+        this === other ||
+            (other is InnerReceipt && ackedMessageId.contentEquals(other.ackedMessageId) && acknowledgedAt == other.acknowledgedAt)
 
     override fun hashCode(): Int {
         var r = ackedMessageId.contentHashCode()

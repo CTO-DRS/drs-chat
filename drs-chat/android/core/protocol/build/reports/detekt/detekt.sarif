@@ -4,50 +4,6 @@
   "runs": [
     {
       "results": [
-        {
-          "level": "warning",
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "file:///home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/InnerPayload.kt"
-                },
-                "region": {
-                  "endColumn": 146,
-                  "endLine": 42,
-                  "startColumn": 1,
-                  "startLine": 42
-                }
-              }
-            }
-          ],
-          "message": {
-            "text": "Line detected, which is longer than the defined maximum line length in the code style."
-          },
-          "ruleId": "detekt.style.MaxLineLength"
-        },
-        {
-          "level": "warning",
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "file:///home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/EnvelopeCodec.kt"
-                },
-                "region": {
-                  "endColumn": 154,
-                  "endLine": 77,
-                  "startColumn": 1,
-                  "startLine": 77
-                }
-              }
-            }
-          ],
-          "message": {
-            "text": "Line detected, which is longer than the defined maximum line length in the code style."
-          },
-          "ruleId": "detekt.style.MaxLineLength"
-        }
       ],
       "tool": {
         "driver": {

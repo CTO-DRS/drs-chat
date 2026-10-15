@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="drs.chat.protocol.FingerprintTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-15T23:46:59" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.013">
+<testsuite name="drs.chat.protocol.FingerprintTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-15T23:54:03" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.025">
   <properties/>
-  <testcase name="fingerprint is deterministic()" classname="drs.chat.protocol.FingerprintTest" time="0.002"/>
-  <testcase name="fingerprint changes with the Ed25519 pub()" classname="drs.chat.protocol.FingerprintTest" time="0.0"/>
+  <testcase name="fingerprint is deterministic()" classname="drs.chat.protocol.FingerprintTest" time="0.005"/>
+  <testcase name="fingerprint changes with the Ed25519 pub()" classname="drs.chat.protocol.FingerprintTest" time="0.002"/>
   <testcase name="fingerprint is 32 bytes()" classname="drs.chat.protocol.FingerprintTest" time="0.001"/>
-  <testcase name="toWords renders exactly 8 words from the 256-word list()" classname="drs.chat.protocol.FingerprintTest" time="0.003"/>
-  <testcase name="keyId is the first 16 bytes()" classname="drs.chat.protocol.FingerprintTest" time="0.001"/>
-  <testcase name="fingerprint changes with the X25519 pub()" classname="drs.chat.protocol.FingerprintTest" time="0.001"/>
+  <testcase name="toWords renders exactly 8 words from the 256-word list()" classname="drs.chat.protocol.FingerprintTest" time="0.005"/>
+  <testcase name="keyId is the first 16 bytes()" classname="drs.chat.protocol.FingerprintTest" time="0.004"/>
+  <testcase name="fingerprint changes with the X25519 pub()" classname="drs.chat.protocol.FingerprintTest" time="0.002"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

@@ -74,6 +74,9 @@ object EnvelopeFactory {
                 payloadCiphertext,
             )
         val sig = crypto.signEnvelopeHeader(EnvelopeCodec.headerBytesOf(h))
-        return WireEnvelope(h.protocolVersion, h.messageId, h.senderKeyId, h.recipientKeyId, h.createdAt, h.ttlSeconds, h.kind, h.payloadCiphertext, sig)
+        return WireEnvelope(
+            h.protocolVersion, h.messageId, h.senderKeyId, h.recipientKeyId,
+            h.createdAt, h.ttlSeconds, h.kind, h.payloadCiphertext, sig,
+        )
     }
 }

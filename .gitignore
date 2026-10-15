@@ -6,3 +6,4 @@ node_modules/
 drs-chat-interim-*.bundle
 download/
 upload/
+**/build/
