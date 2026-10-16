@@ -5,9 +5,27 @@ on:
     branches: [main, master]
   pull_request:
 
+# HARD RULE (owner decree, M3 push): every push must leave main GREEN.
+# The workflow below runs:
+#   1. ktlintCheck        — code style across ALL Kotlin sources
+#   2. detekt             — static analysis across ALL Kotlin sources
+#   3. vault-guard        — CI guard: no user-auth/biometric binding on vault key
+#   4. byte-array-key-guard — structural guard: no ByteArray-as-HashMap-key
+#                              (referential equals bug family)
+#   5. JVM tests          — :core:protocol, :core:crypto, :core:domain
+#   6. Robolectric tests  — :core:data (Room + SQLCipher + Keystore vault)
+#
+# assembleDebug is NOT in CI yet — the Android UI modules (:app, :feature:chat)
+# have no real source until M4. Adding assembleDebug now would force CI red
+# for unrelated reasons. M4 will extend the command to add assembleDebug.
+#
+# Each future module push EXTENDS the CI command:
+#   M3   = ktlint + detekt + vaultGuard + byteArrayKeyGuard + JVM tests + Robolectric
+#   M4   = + assembleDebug + :app tests + :feature:chat tests
+#   M5+  = + :transport:websocket tests + :testing:e2e tests
 jobs:
   build:
-    name: Build, lint, test
+    name: ktlint + detekt + guards + tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +43,24 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/libs.versions.toml', '**/*.gradle.kts') }}
           restore-keys: gradle-${{ runner.os }}-
-      - name: ktlint + detekt + test + assembleDebug
-        working-directory: drs-chat/android
-        run: ./gradlew --no-daemon --stacktrace ktlintCheck detekt test assembleDebug
+      - name: Make guard scripts executable
+        run: chmod +x scripts/vault-guard.sh scripts/byte-array-key-guard.sh
+      - name: ktlint
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace ktlintCheck
+      - name: detekt
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace detekt
+      - name: vault-guard (Keystore vault policy)
+        run: ./scripts/vault-guard.sh
+      - name: byte-array-key-guard (ByteArray-as-key bug family)
+        run: ./scripts/byte-array-key-guard.sh
+      - name: JVM tests (protocol, crypto, domain)
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace :core:protocol:test :core:crypto:test :core:domain:test
+      - name: Robolectric tests (data — Room + SQLCipher + vault)
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace :core:data:test
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,4 +69,5 @@ jobs:
           path: |
             android/**/build/test-results/**/*.xml
             android/**/build/reports/**
+            scripts/
           if-no-files-found: ignore

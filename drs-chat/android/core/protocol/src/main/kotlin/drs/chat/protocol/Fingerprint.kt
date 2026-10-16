@@ -1,6 +1,5 @@
 package drs.chat.protocol
 
-import drs.chat.domain.model.KeyId
 import java.security.MessageDigest
 
 object Fingerprint {

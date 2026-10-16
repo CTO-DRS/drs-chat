@@ -82,3 +82,75 @@ A `BleTransport` must: implement `Transport`, derive `recipientKeyId` routing fr
 * (+) Adding BLE/LoRa is additive: new module implementing one interface + policy update.
 * (−) The manager is slightly anemic in Phase 1 (manages one transport) — accepted as the price of a clean seam.
 * (−) `SendReceipt.SENT` semantics can be misread as delivery by future contributors; the ADR and status ticks (QUEUED/SENT/DELIVERED/READ) keep the vocabulary unambiguous.
+
+---
+
+## Amendment — CryptoEnginePort + KeyId relocated to :core:protocol (M3 push)
+
+**Status:** Accepted (owner decree, M3 push).
+**Resolves:** circular dependency `:core:domain ↔ :core:protocol` introduced
+when `:core:domain`'s receive pipeline + drainer needed `WireEnvelope`,
+`EnvelopeFactory`, `InnerMessage`, etc. (M3).
+
+### Issue
+
+Before M3, `:core:protocol` declared `api(project(":core:domain"))` because
+its `EnvelopeFactory.build(...)` took a `CryptoEnginePort` parameter, and
+`CryptoEnginePort` + `KeyId`/`ContactId` lived in `:core:domain`. The M3
+receive pipeline + drainer (in `:core:domain`) need `WireEnvelope`,
+`EnvelopeFactory`, `InnerMessage` — i.e. `:core:domain` needs
+`:core:protocol`. The two `api()` deps form a cycle that Gradle refuses to
+schedule.
+
+### Decision
+
+Move the cross-cutting crypto port and the universal routing token OUT of
+`:core:domain` INTO `:core:protocol`:
+
+* `drs.chat.protocol.KeyId` (was `drs.chat.domain.model.KeyId`)
+* `drs.chat.protocol.ContactId` typealias (was `drs.chat.domain.model.ContactId`)
+* `drs.chat.protocol.CryptoEnginePort` (was `drs.chat.domain.port.CryptoEnginePort`)
+* `drs.chat.protocol.toBadge()`, `KeyId.toHex()`, `KeyId.toShortHex()`
+
+`:core:protocol` is now self-contained — no project dependencies.
+`:core:domain` declares `api(project(":core:protocol"))` and imports
+`KeyId`/`ContactId`/`CryptoEnginePort` from there.
+`:core:crypto` already depended on `:core:protocol`; it now also gets the
+port + key types from there (no new dep).
+
+### What STAYS in :core:domain
+
+Domain-specific types remain: `MessageId`, `TransportId`, `OutboxEntry`,
+`OutboxState`, `Contact`, `MessageRecord`, `MessageStatus`, `Direction`,
+`VerificationLevel`. These are referenced only inside `:core:domain` and
+its consumers (the `:app` UI), not by `:core:protocol`. No need to move
+them.
+
+### Rationale
+
+Placing `CryptoEnginePort` + `KeyId` in `:core:protocol` is defensible
+because:
+
+1. `:core:protocol` is the **lowest** non-trivial module (it owns the wire
+   format). Both `:core:domain` and `:core:crypto` already depend on it.
+2. `KeyId` is the universal routing token whose byte layout is pinned by
+   `EnvelopeConstants.KEY_ID_BYTES` (a protocol constant). The type is
+   semantically part of the wire contract.
+3. `CryptoEnginePort` is the contract `EnvelopeFactory.build` calls into.
+   Co-locating the port with the factory keeps the dependency graph
+   strictly acyclic.
+
+### Alternative considered (rejected)
+
+A new `:core:common` module holding only the shared value types + ports.
+This is cleaner architecturally but adds an extra module + Gradle config
+for marginal benefit in Phase 1. The :core:protocol placement is the
+pragmatic Phase 1 answer; if `:core:protocol` grows to absorb many ports
+that aren't wire-format concerns, the split becomes worth the cost.
+
+### Audit hook
+
+`./gradlew :core:protocol:dependencies` shows zero project dependencies.
+`./gradlew :core:domain:dependencies` shows `:core:protocol` (transitively
+`:core:crypto` via `testImplementation(project(":core:crypto"))`). No
+cycle.

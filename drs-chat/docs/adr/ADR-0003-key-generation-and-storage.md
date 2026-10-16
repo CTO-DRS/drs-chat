@@ -67,3 +67,53 @@ BouncyCastle (`bcprov-jdk18on`) uniformly across API 26–35 for Ed25519 sign/ve
 * (−) Private keys transit app memory (unavoidable given libsignal); documented, not hidden.
 * (−) Lost device = lost identity, by design (no recovery is a non-goal); invite bundles re-establish contacts on the new identity.
 * (−) Prekey exhaustion on a stale bundle falls back to signed-prekey-only X3DH (libsignal supports it) — test-covered.
+
+---
+
+## Amendment B — OTK Replenish Threshold (2026-10-16)
+
+**Status:** Accepted (owner decree, M3 push).
+**Supersedes:** the "refill when pool < 10" line in §1 of this ADR.
+
+### Issue
+
+The M2 `CryptoEngine` implementation used `OTK_REPLENISH_THRESHOLD = 10`, an
+undocumented divergence from the baseline spec which says threshold 25
+("pool≥25 → no-op"). The M2 test #8 even referenced "99≥25 → no-op" in its
+comment while the actual constant was 10 — the test name lied about the
+behaviour it asserted. Silence on the divergence was not accepted.
+
+### Decision
+
+Restore `OTK_REPLENISH_THRESHOLD = 25` to match the baseline spec.
+
+**Semantics after this amendment:**
+- Pool starts at 25 on a fresh identity (= threshold).
+- A single consumed OTK drops the pool to 24 → below threshold → the next
+  `replenishOtkIfNeeded` call backfills one key.
+- Pool ≥ 25 → no-op (true no-op boundary at the spec value).
+
+**Why restore (vs. write a rationale for 10):**
+The threshold = 10 path required defending "let the pool run down to 10 before
+replenishing" — a more aggressive risk posture with no operational upside in
+Phase 1. The spec's threshold = 25 means **any** consumed OTK is immediately
+backfilled, eliminating the "stale bundle: no OTK available" failure mode for
+the relay between replenish cycles. Cost: a few extra key generations per
+session — negligible against the cost of an X3DH handshake failure on a
+high-burst contact.
+
+### Test surface delta
+
+| Test | Before | After |
+|------|--------|-------|
+| #8 `replenish adds OTKs when below threshold` | comment said "99≥25 no-op", constant was 10 | comment + constant both = 25 |
+| #18 `OTK pool below threshold triggers replenish` | pool=9 < 10 → replenish | pool=9 < 25 → replenish (unchanged behaviour, still passes) |
+| #19 `OTK pool at threshold is no-op` | pool=11 > 10 → no-op (asserted "above threshold") | pool=25 = threshold → no-op (asserted "at threshold") |
+
+### Audit hook
+
+`scripts/vault-guard.sh` does not enforce this constant. The threshold value
+lives in code (`CryptoEngine.OTK_REPLENISH_THRESHOLD`); the audit hook is the
+test surface above. If a future change drifts the threshold, the tests must
+change with it — a one-line grep of `CryptoEngineTest.kt` for `threshold`
+reveals the actual contract.

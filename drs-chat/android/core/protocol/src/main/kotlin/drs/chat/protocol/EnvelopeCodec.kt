@@ -1,6 +1,5 @@
 package drs.chat.protocol
 
-import drs.chat.domain.port.CryptoEnginePort
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray

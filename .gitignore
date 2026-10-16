@@ -7,3 +7,4 @@ drs-chat-interim-*.bundle
 download/
 upload/
 **/build/
+drs-chat/android/.gradle/

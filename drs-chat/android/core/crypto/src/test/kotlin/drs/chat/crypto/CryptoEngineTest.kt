@@ -105,12 +105,12 @@ class CryptoEngineTest {
         assertTrue(after < before, "OTK pool must deplete after decrypt: before=$before after=$after")
     }
 
-    // 8. OTK threshold replenish (pool < 10 → replenish; 99≥25 → no-op)
+    // 8. OTK threshold replenish (pool < 25 → replenish; pool ≥ 25 → no-op)
     @Test fun `replenish adds OTKs when below threshold, no-op when above`() {
         val engine = CryptoEngine.generate(3003, 1)
-        // pool starts at 25 (≥10) → replenish is a no-op
+        // pool starts at 25 (≥25) → replenish is a no-op
         val added0 = engine.replenishOtkIfNeeded(nextId = 26)
-        assertEquals(0, added0, "99≥25 → no replenish (no-op)")
+        assertEquals(0, added0, "pool≥25 → no replenish (no-op)")
         // simulate depletion: remove all but 5 OTKs
         for (i in 1..20) {
             try {
@@ -119,7 +119,7 @@ class CryptoEngineTest {
             }
         }
         val added1 = engine.replenishOtkIfNeeded(nextId = 100)
-        assertTrue(added1 > 0, "pool <10 → must replenish")
+        assertTrue(added1 > 0, "pool <25 → must replenish")
         assertEquals(25, engine.otkPoolSize(), "pool must be back to 25 after replenish")
     }
 
@@ -256,19 +256,13 @@ class CryptoEngineTest {
         assertTrue(added > 0, "pool below threshold (9) → must replenish")
     }
 
-    // 19. OTK pool above threshold (11 → no replenish)
-    @Test fun `OTK pool above threshold is no-op`() {
+    // 19. OTK pool at threshold (25 → no replenish)
+    @Test fun `OTK pool at threshold is no-op`() {
         val engine = CryptoEngine.generate(6006, 1)
-        // remove 14 OTKs → pool = 11 (above threshold)
-        for (i in 1..14) {
-            try {
-                engine.store.removePreKey(i)
-            } catch (_: Exception) {
-            }
-        }
-        assertEquals(11, engine.otkPoolSize())
+        // fresh engine → pool = 25 = threshold → no-op
+        assertEquals(25, engine.otkPoolSize())
         val added = engine.replenishOtkIfNeeded(100)
-        assertEquals(0, added, "pool above threshold (11) → no replenish")
+        assertEquals(0, added, "pool at threshold (25) → no replenish")
     }
 
     // 20. Signed-prekey just-under 72h (no rotation)

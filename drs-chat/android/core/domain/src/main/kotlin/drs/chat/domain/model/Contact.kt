@@ -1,5 +1,7 @@
 package drs.chat.domain.model
 
+import drs.chat.protocol.ContactId
+
 enum class MessageStatus { QUEUED, SENT, DELIVERED, READ, FAILED }
 
 enum class Direction { INCOMING, OUTGOING }

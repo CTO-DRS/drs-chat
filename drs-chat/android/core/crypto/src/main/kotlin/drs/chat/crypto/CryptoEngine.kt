@@ -1,9 +1,9 @@
 package drs.chat.crypto
 
-import drs.chat.domain.model.ContactId
-import drs.chat.domain.model.KeyId
-import drs.chat.domain.port.CryptoEnginePort
 import drs.chat.protocol.AuthWire
+import drs.chat.protocol.ContactId
+import drs.chat.protocol.CryptoEnginePort
+import drs.chat.protocol.KeyId
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
@@ -142,7 +142,13 @@ class CryptoEngine private constructor(
 
     companion object {
         const val OTK_POOL_SIZE = 25
-        const val OTK_REPLENISH_THRESHOLD = 10
+
+        // Threshold restored to 25 per baseline spec (owner decree, ADR-0003
+        // Amendment B). Replenish triggers as soon as the pool drops below the
+        // pool size — i.e. ANY consumed OTK is immediately backfilled. The
+        // earlier threshold=10 was an undocumented divergence; silence was not
+        // accepted.
+        const val OTK_REPLENISH_THRESHOLD = 25
         const val SIGNED_PREKEY_ROTATION_MS = 72 * 60 * 60 * 1000L
 
         fun generate(

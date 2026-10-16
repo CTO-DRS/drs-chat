@@ -1,7 +1,5 @@
 package drs.chat.protocol
 
-import drs.chat.domain.model.KeyId
-import drs.chat.domain.port.CryptoEnginePort
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
