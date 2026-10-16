@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="drs.chat.protocol.InnerPayloadTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-16T01:01:41" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.036">
+<testsuite name="drs.chat.protocol.InnerPayloadTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-16T01:10:22" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.023">
   <properties/>
-  <testcase name="blank text is rejected()" classname="drs.chat.protocol.InnerPayloadTest" time="0.006"/>
-  <testcase name="message encode decode encode is stable()" classname="drs.chat.protocol.InnerPayloadTest" time="0.006"/>
-  <testcase name="session-reset round-trips()" classname="drs.chat.protocol.InnerPayloadTest" time="0.005"/>
-  <testcase name="message round-trips through CBOR()" classname="drs.chat.protocol.InnerPayloadTest" time="0.001"/>
-  <testcase name="receipt round-trips through CBOR()" classname="drs.chat.protocol.InnerPayloadTest" time="0.004"/>
-  <testcase name="text over cap is rejected()" classname="drs.chat.protocol.InnerPayloadTest" time="0.003"/>
+  <testcase name="blank text is rejected()" classname="drs.chat.protocol.InnerPayloadTest" time="0.005"/>
+  <testcase name="message encode decode encode is stable()" classname="drs.chat.protocol.InnerPayloadTest" time="0.004"/>
+  <testcase name="session-reset round-trips()" classname="drs.chat.protocol.InnerPayloadTest" time="0.003"/>
+  <testcase name="message round-trips through CBOR()" classname="drs.chat.protocol.InnerPayloadTest" time="0.002"/>
+  <testcase name="receipt round-trips through CBOR()" classname="drs.chat.protocol.InnerPayloadTest" time="0.001"/>
+  <testcase name="text over cap is rejected()" classname="drs.chat.protocol.InnerPayloadTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
