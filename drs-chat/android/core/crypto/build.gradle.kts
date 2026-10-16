@@ -1,15 +1,15 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
-// :core:crypto — pure JVM. compileOnly libsignal-client so the main source
-// compiles against the real Rust API; tests run against libsignal-client
-// (desktop natives, real engine). The Android :app provides libsignal-android
-// at runtime (same org.signal.libsignal.protocol.* API, Android natives).
+// :core:crypto is PURE JVM — compileOnly libsignal-client (same org.signal.libsignal.protocol.*
+// API as libsignal-android). Host-JVM tests run the real Rust engine via testImplementation.
+// The Android :app provides libsignal-android (Android natives) at runtime.
 dependencies {
     api(project(":core:domain"))
     api(project(":core:protocol"))
-    compileOnly(libs.libsignal.client)
     api(libs.bouncycastle.prov)
+    compileOnly(libs.libsignal.client)
     testImplementation(libs.libsignal.client)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.junit.jupiter.params)

@@ -1,0 +1,11 @@
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m17[90m:18:[0m Newline expected after opening parenthesis [90m(standard:function-signature)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m17[90m:45:[0m Parameter should start on a newline [90m(standard:function-signature)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m17[90m:63:[0m Parameter should start on a newline [90m(standard:function-signature)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m18[90m:11:[0m Newline expected before closing parenthesis [90m(standard:function-signature)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m18[90m:11:[0m Missing trailing comma before ")" [90m(standard:trailing-comma-on-declaration-site)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m25[90m:30:[0m First line of body expression fits on same line as function signature [90m(standard:function-signature)[0m
+[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mAuthWire.kt[90m:[0m29[90m:22:[0m First line of body expression fits on same line as function signature [90m(standard:function-signature)[0m
+
+Summary error count (descending) by rule:
+  standard:function-signature: 6
+  standard:trailing-comma-on-declaration-site: 1

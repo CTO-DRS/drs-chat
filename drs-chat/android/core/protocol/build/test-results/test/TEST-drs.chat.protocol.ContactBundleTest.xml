@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="drs.chat.protocol.ContactBundleTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-16T01:10:22" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.121">
+<testsuite name="drs.chat.protocol.ContactBundleTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-16T01:32:56" hostname="c-6ad16047-145cf406-6eb9893e0690" time="0.262">
   <properties/>
-  <testcase name="round-trips through CBOR()" classname="drs.chat.protocol.ContactBundleTest" time="0.078"/>
-  <testcase name="frozen golden vector pins the exact bundle wire bytes()" classname="drs.chat.protocol.ContactBundleTest" time="0.02"/>
-  <testcase name="OTK id+pub must both be null or both non-null()" classname="drs.chat.protocol.ContactBundleTest" time="0.006"/>
-  <testcase name="tamper at known offset inside signedPreKeySig region()" classname="drs.chat.protocol.ContactBundleTest" time="0.001"/>
-  <testcase name="encode decode encode is stable()" classname="drs.chat.protocol.ContactBundleTest" time="0.007"/>
-  <testcase name="OTK-less bundle (signed-prekey-only X3DH fallback) round-trips()" classname="drs.chat.protocol.ContactBundleTest" time="0.002"/>
+  <testcase name="round-trips through CBOR()" classname="drs.chat.protocol.ContactBundleTest" time="0.131"/>
+  <testcase name="frozen golden vector pins the exact bundle wire bytes()" classname="drs.chat.protocol.ContactBundleTest" time="0.033"/>
+  <testcase name="OTK id+pub must both be null or both non-null()" classname="drs.chat.protocol.ContactBundleTest" time="0.002"/>
+  <testcase name="tamper at known offset inside signedPreKeySig region()" classname="drs.chat.protocol.ContactBundleTest" time="0.005"/>
+  <testcase name="encode decode encode is stable()" classname="drs.chat.protocol.ContactBundleTest" time="0.009"/>
+  <testcase name="OTK-less bundle (signed-prekey-only X3DH fallback) round-trips()" classname="drs.chat.protocol.ContactBundleTest" time="0.026"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

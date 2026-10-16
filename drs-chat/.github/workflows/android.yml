@@ -25,7 +25,7 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/libs.versions.toml', '**/*.gradle.kts') }}
           restore-keys: gradle-${{ runner.os }}-
-      - name: ktlint + detekt + tests + assembleDebug
+      - name: ktlint + detekt + test + assembleDebug
         working-directory: android
         run: ./gradlew --no-daemon --stacktrace ktlintCheck detekt test assembleDebug
       - name: Upload test results
@@ -35,5 +35,5 @@ jobs:
           name: test-results
           path: |
             android/**/build/test-results/**/*.xml
-            android/**/build/reports/detekt/**
+            android/**/build/reports/**
           if-no-files-found: ignore

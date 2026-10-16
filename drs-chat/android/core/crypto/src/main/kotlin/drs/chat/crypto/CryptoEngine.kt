@@ -3,7 +3,7 @@ package drs.chat.crypto
 import drs.chat.domain.model.ContactId
 import drs.chat.domain.model.KeyId
 import drs.chat.domain.port.CryptoEnginePort
-import drs.chat.protocol.ContactBundle
+import drs.chat.protocol.AuthWire
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
@@ -26,134 +26,27 @@ import org.signal.libsignal.protocol.state.SignedPreKeyRecord
 import org.signal.libsignal.protocol.state.impl.InMemorySignalProtocolStore
 import java.security.SecureRandom
 
-/** Auth data construction (duplicated from RelayWire to avoid crypto→transport dependency). */
-private const val AUTH_CONTEXT = "drs-auth-v1"
-
-private fun authData(
-    nonce: ByteArray,
-    ts: Long,
-    x25519Pub: ByteArray,
-): ByteArray {
-    val tsBytes = ByteArray(8) { (ts ushr (it * 8)).toByte() }
-    return nonce + tsBytes + AUTH_CONTEXT.toByteArray(Charsets.UTF_8) + x25519Pub
-}
-
 /**
- * The single crypto facade (ARCH §2). Ed25519 (BC, uniform API 26–35) for
- * envelope signing + relay auth. libsignal (Rust) for PQXDH + Double Ratchet.
- * compileOnly libsignal-client → host-JVM tests run real Rust engine; :app
- * provides libsignal-android at runtime (same org.signal.libsignal.protocol.* API).
+ * The single crypto facade (ARCH §2 — no crypto code outside this module). Real
+ * BouncyCastle Ed25519 (envelope signing + relay auth) + real libsignal PQXDH
+ * (X3DH + Double Ratchet + Kyber). Pure JVM — runs on host JVM via libsignal-client
+ * (same API as libsignal-android, which :app provides at runtime).
+ *
+ * M3.5 status: FULL — identity gen, prekeys, PQXDH sessions, OTK replenish,
+ * signed-prekey rotation, relay challenge, plaintext cap, identity trust.
  */
-class CryptoEngine(
+@Suppress("TooManyFunctions") // inherent to a crypto facade
+class CryptoEngine private constructor(
     private val ed25519Priv: Ed25519PrivateKeyParameters,
     private val ed25519Pub: Ed25519PublicKeyParameters,
-    val identity: IdentityKeyPair,
-    val store: InMemorySignalProtocolStore,
-    private val regId: Int,
-    private val deviceId: Int = 1,
-    private var nextPreKeyId: Int = 100,
-    private var clock: () -> Long = { System.currentTimeMillis() },
+    private val identity: IdentityKeyPair,
+    internal val store: InMemorySignalProtocolStore,
+    internal val regId: Int,
+    internal val deviceId: Int,
 ) : CryptoEnginePort {
-    private val otkThreshold = 25
-    private val otkReplenishBatch = 25
+    // String keys (toHex) — NOT ByteArray (ByteArray.equals is referential → HashMap<ByteArray> bug)
+    private val trustedIdentities = mutableMapOf<String, Boolean>()
 
-    // ---- Prekey management ----
-    fun signedPreKey(id: Int): SignedPreKeyRecord {
-        val kp = ECKeyPair.generate()
-        val sig = identity.privateKey.calculateSignature(kp.publicKey.serialize())
-        val rec = SignedPreKeyRecord(id, clock(), kp, sig)
-        store.storeSignedPreKey(id, rec)
-        return rec
-    }
-
-    fun oneTimePreKey(id: Int): PreKeyRecord {
-        val rec = PreKeyRecord(id, ECKeyPair.generate())
-        store.storePreKey(id, rec)
-        return rec
-    }
-
-    fun kyberPreKey(id: Int): KyberPreKeyRecord {
-        val kp = KEMKeyPair.generate(KEMKeyType.KYBER_1024)
-        val sig = identity.privateKey.calculateSignature(kp.publicKey.serialize())
-        val rec = KyberPreKeyRecord(id, clock(), kp, sig)
-        store.storeKyberPreKey(id, rec)
-        return rec
-    }
-
-    /** Replenish OTKs when pool < threshold. Returns count generated (0 = no-op). */
-    fun replenishOtk(currentPoolSize: Int): Int {
-        if (currentPoolSize >= otkThreshold) return 0
-        for (i in 1..otkReplenishBatch) {
-            oneTimePreKey(nextPreKeyId++)
-        }
-        return otkReplenishBatch
-    }
-
-    /** Rotate signed prekey if older than [intervalMs] (default 72h). */
-    fun rotateSignedPreKey(
-        currentSpkId: Int,
-        intervalMs: Long = 72 * 60 * 60 * 1000L,
-    ): Boolean {
-        val spk = store.loadSignedPreKey(currentSpkId)
-        if (clock() - spk.timestamp < intervalMs) return false
-        store.removeSignedPreKey(currentSpkId)
-        signedPreKey(currentSpkId + 1)
-        return true
-    }
-
-    fun setClock(c: () -> Long) {
-        clock = c
-    }
-
-    // ---- Session management ----
-    fun inviteBundle(
-        spkId: Int = 1,
-        otkId: Int? = 1,
-        kyberId: Int = 1,
-    ): PreKeyBundle {
-        val spk = store.loadSignedPreKey(spkId)
-        val kyber = store.loadKyberPreKey(kyberId)
-        val (preKeyId, preKey) =
-            if (otkId != null) {
-                val r = store.loadPreKey(otkId)
-                r.id to r.keyPair.publicKey
-            } else {
-                0 to null
-            }
-        return PreKeyBundle(
-            store.localRegistrationId, deviceId, preKeyId, preKey,
-            spk.id, spk.keyPair.publicKey, spk.signature, identity.publicKey,
-            kyber.id, kyber.keyPair.publicKey, kyber.signature,
-        )
-    }
-
-    fun buildContactBundle(
-        spkId: Int = 1,
-        otkId: Int? = 1,
-        kyberId: Int = 1,
-    ): ContactBundle {
-        val spk = store.loadSignedPreKey(spkId)
-        val kyber = store.loadKyberPreKey(kyberId)
-        val otid: Int? = otkId
-        val otpub: ByteArray? = if (otkId != null) store.loadPreKey(otkId).keyPair.publicKey.publicKeyBytes else null
-        return ContactBundle(
-            ed25519Pub.encoded, identity.publicKey.publicKey.publicKeyBytes,
-            spk.id, spk.keyPair.publicKey.publicKeyBytes, spk.signature,
-            otid, otpub,
-            kyber.id, kyber.keyPair.publicKey.serialize(), kyber.signature,
-        )
-    }
-
-    fun establishSessionTo(
-        contact: ContactId,
-        bundle: PreKeyBundle,
-    ) {
-        SessionBuilder(store, addressOf(contact)).process(bundle)
-    }
-
-    private fun addressOf(contact: ContactId): SignalProtocolAddress = SignalProtocolAddress(contact.toHex(), deviceId)
-
-    // ---- CryptoEnginePort ----
     override fun signEnvelopeHeader(headerBytes: ByteArray): ByteArray {
         val s = Ed25519Signer()
         s.init(true, ed25519Priv)
@@ -175,7 +68,10 @@ class CryptoEngine(
     override fun encryptForContact(
         contact: ContactId,
         plaintext: ByteArray,
-    ): ByteArray = SessionCipher(store, addressOf(contact)).encrypt(plaintext).serialize()
+    ): ByteArray {
+        require(plaintext.size <= drs.chat.protocol.EnvelopeConstants.INNER_TEXT_MAX_CHARS) { "plaintext exceeds cap" }
+        return SessionCipher(store, addressOf(contact)).encrypt(plaintext).serialize()
+    }
 
     override fun decryptFromContact(
         contact: ContactId,
@@ -191,7 +87,7 @@ class CryptoEngine(
         return when (ct) {
             is PreKeySignalMessage -> cipher.decrypt(ct)
             is SignalMessage -> cipher.decrypt(ct)
-            else -> error("unexpected")
+            else -> error("unexpected ciphertext type")
         }
     }
 
@@ -201,36 +97,119 @@ class CryptoEngine(
 
     override fun localX25519Pub(): ByteArray = identity.publicKey.publicKey.publicKeyBytes
 
-    override fun localKeyId(): KeyId = KeyId(java.security.MessageDigest.getInstance("SHA-256").digest(ed25519Pub.encoded).copyOf(16))
+    override fun localKeyId(): KeyId = KeyId(AuthWire.keyIdOf(ed25519Pub.encoded))
 
-    // ---- Relay challenge auth ----
-    fun signAuthChallenge(
+    fun addressOf(contact: ContactId): SignalProtocolAddress = SignalProtocolAddress(contact.toHex(), deviceId)
+
+    fun inviteBundle(
+        spkId: Int,
+        otpId: Int?,
+        kyberId: Int,
+    ): PreKeyBundle {
+        val spk = store.loadSignedPreKey(spkId)
+        val kyber = store.loadKyberPreKey(kyberId)
+        val (preKeyId, preKey) =
+            if (otpId != null) {
+                val r = store.loadPreKey(otpId)
+                r.id to r.keyPair.publicKey
+            } else {
+                0 to null
+            }
+        return PreKeyBundle(
+            store.localRegistrationId, deviceId, preKeyId, preKey,
+            spk.id, spk.keyPair.publicKey, spk.signature, identity.publicKey,
+            kyber.id, kyber.keyPair.publicKey, kyber.signature,
+        )
+    }
+
+    fun establishSessionTo(
+        contact: ContactId,
+        bundle: PreKeyBundle,
+    ) {
+        SessionBuilder(store, addressOf(contact)).process(bundle)
+    }
+
+    fun isTrustedIdentity(keyId: ByteArray): Boolean = trustedIdentities[keyId.joinToString("") { "%02x".format(it) }] == true
+
+    fun trustIdentity(keyId: ByteArray) {
+        trustedIdentities[keyId.joinToString("") { "%02x".format(it) }] = true
+    }
+
+    fun relayChallengeSig(
         nonce: ByteArray,
         ts: Long,
-    ): ByteArray = signEnvelopeHeader(authData(nonce, ts, localX25519Pub()))
+    ): ByteArray = signEnvelopeHeader(AuthWire.authData(nonce, ts, localX25519Pub()))
 
     companion object {
+        const val OTK_POOL_SIZE = 25
+        const val OTK_REPLENISH_THRESHOLD = 10
+        const val SIGNED_PREKEY_ROTATION_MS = 72 * 60 * 60 * 1000L
+
         fun generate(
-            regId: Int = 1001,
+            regId: Int = 1000,
             deviceId: Int = 1,
         ): CryptoEngine {
-            val identity = IdentityKeyPair.generate()
             val gen = Ed25519KeyPairGenerator().apply { init(Ed25519KeyGenerationParameters(SecureRandom())) }
             val pair = gen.generateKeyPair()
+            val ed25519Priv = pair.private as Ed25519PrivateKeyParameters
+            val ed25519Pub = pair.public as Ed25519PublicKeyParameters
+            val identity = IdentityKeyPair.generate()
             val store = InMemorySignalProtocolStore(identity, regId)
-            val ce =
-                CryptoEngine(
-                    pair.private as Ed25519PrivateKeyParameters,
-                    pair.public as Ed25519PublicKeyParameters,
-                    identity,
-                    store,
-                    regId,
-                    deviceId,
-                )
-            ce.signedPreKey(1)
-            ce.oneTimePreKey(1)
-            ce.kyberPreKey(1)
-            return ce
+            val engine = CryptoEngine(ed25519Priv, ed25519Pub, identity, store, regId, deviceId)
+            engine.generateSignedPreKey(1, System.currentTimeMillis())
+            for (i in 1..OTK_POOL_SIZE) engine.generateOneTimePreKey(i)
+            engine.generateKyberPreKey(1)
+            return engine
         }
+    }
+
+    internal fun generateSignedPreKey(
+        id: Int,
+        timestamp: Long,
+    ) {
+        val kp = ECKeyPair.generate()
+        val sig = identity.privateKey.calculateSignature(kp.publicKey.serialize())
+        store.storeSignedPreKey(id, SignedPreKeyRecord(id, timestamp, kp, sig))
+    }
+
+    internal fun generateOneTimePreKey(id: Int) {
+        store.storePreKey(id, PreKeyRecord(id, ECKeyPair.generate()))
+    }
+
+    internal fun generateKyberPreKey(id: Int) {
+        val kp: KEMKeyPair = KEMKeyPair.generate(KEMKeyType.KYBER_1024)
+        val sig = identity.privateKey.calculateSignature(kp.publicKey.serialize())
+        store.storeKyberPreKey(id, KyberPreKeyRecord(id, System.currentTimeMillis(), kp, sig))
+    }
+
+    internal fun otkPoolSize(): Int {
+        var count = 0
+        for (i in 1..255) {
+            try {
+                store.loadPreKey(i)
+                count++
+            } catch (_: Exception) {
+            }
+        }
+        return count
+    }
+
+    internal fun replenishOtkIfNeeded(nextId: Int): Int {
+        val current = otkPoolSize()
+        if (current >= OTK_REPLENISH_THRESHOLD) return 0 // no-op (99>=25 → 0 added)
+        val toAdd = OTK_POOL_SIZE - current
+        for (i in nextId until nextId + toAdd) generateOneTimePreKey(i)
+        return toAdd
+    }
+
+    internal fun rotateSignedPreKeyIfNeeded(
+        id: Int,
+        now: Long,
+    ): Boolean {
+        val spk = store.loadSignedPreKey(id)
+        if (now - spk.timestamp < SIGNED_PREKEY_ROTATION_MS) return false
+        store.removeSignedPreKey(id)
+        generateSignedPreKey(id, now)
+        return true
     }
 }
