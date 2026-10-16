@@ -154,7 +154,14 @@ class DrDatabaseTest {
     fun `identity save and retrieve`() =
         runBlocking {
             val dao: IdentityDao = db.identities()
-            dao.upsert(IdentityEntity("alice", 1, ByteArray(33) { it.toByte() }, "trusted"))
+            dao.upsert(
+                IdentityEntity(
+                    addressName = "alice",
+                    deviceId = 1,
+                    identityKeyBytes = ByteArray(33) { it.toByte() },
+                    trustedLevel = "trusted",
+                ),
+            )
             val rec = dao.find("alice", 1)
             assertNotNull(rec)
             assertArrayEquals(ByteArray(33) { it.toByte() }, rec!!.identityKeyBytes)
@@ -165,7 +172,7 @@ class DrDatabaseTest {
     fun `identity delete`() =
         runBlocking {
             val dao = db.identities()
-            dao.upsert(IdentityEntity("alice", 1, ByteArray(33), "trusted"))
+            dao.upsert(IdentityEntity(addressName = "alice", deviceId = 1, identityKeyBytes = ByteArray(33), trustedLevel = "trusted"))
             assertEquals(1, dao.delete("alice", 1))
             assertNull(dao.find("alice", 1))
         }
@@ -175,7 +182,7 @@ class DrDatabaseTest {
     fun `session save load contains delete`() =
         runBlocking {
             val dao: SessionDao = db.sessions()
-            dao.upsert(SessionEntity("bob", 1, ByteArray(64) { it.toByte() }))
+            dao.upsert(SessionEntity(addressName = "bob", deviceId = 1, sessionBytes = ByteArray(64) { it.toByte() }))
             assertTrue(dao.contains("bob", 1))
             val rec = dao.find("bob", 1)!!
             assertArrayEquals(ByteArray(64) { it.toByte() }, rec.sessionBytes)
@@ -189,8 +196,8 @@ class DrDatabaseTest {
         runBlocking {
             val dao: PreKeyDao = db.preKeys()
             assertEquals(0, dao.count())
-            dao.upsert(PreKeyEntity(1, ByteArray(32)))
-            dao.upsert(PreKeyEntity(2, ByteArray(32)))
+            dao.upsert(PreKeyEntity(preKeyId = 1, keyBytes = ByteArray(32)))
+            dao.upsert(PreKeyEntity(preKeyId = 2, keyBytes = ByteArray(32)))
             assertEquals(2, dao.count())
             assertNotNull(dao.find(1))
             assertEquals(1, dao.delete(1))
@@ -202,7 +209,7 @@ class DrDatabaseTest {
     fun `signed prekey save load remove`() =
         runBlocking {
             val dao: SignedPreKeyDao = db.signedPreKeys()
-            dao.upsert(SignedPreKeyEntity(1, ByteArray(64), 1000L))
+            dao.upsert(SignedPreKeyEntity(signedPreKeyId = 1, keyBytes = ByteArray(64), timestamp = 1000L))
             val rec = dao.find(1)!!
             assertEquals(1000L, rec.timestamp)
             assertEquals(1, dao.delete(1))
@@ -214,7 +221,7 @@ class DrDatabaseTest {
     fun `kyber prekey save load remove`() =
         runBlocking {
             val dao: KyberPreKeyDao = db.kyberPreKeys()
-            dao.upsert(KyberPreKeyEntity(1, ByteArray(1568), 2000L))
+            dao.upsert(KyberPreKeyEntity(kyberPreKeyId = 1, keyBytes = ByteArray(1568), timestamp = 2000L))
             assertEquals(1, dao.count())
             val rec = dao.find(1)!!
             assertEquals(2000L, rec.timestamp)
@@ -262,8 +269,8 @@ class DrDatabaseTest {
     fun `identity overwrite updates trustedLevel`() =
         runBlocking {
             val dao = db.identities()
-            dao.upsert(IdentityEntity("a", 1, ByteArray(33), "untrusted"))
-            dao.upsert(IdentityEntity("a", 1, ByteArray(33) { 1 }, "trusted"))
+            dao.upsert(IdentityEntity(addressName = "a", deviceId = 1, identityKeyBytes = ByteArray(33), trustedLevel = "untrusted"))
+            dao.upsert(IdentityEntity(addressName = "a", deviceId = 1, identityKeyBytes = ByteArray(33) { 1 }, trustedLevel = "trusted"))
             val rec = dao.find("a", 1)!!
             assertEquals("trusted", rec.trustedLevel)
             assertArrayEquals(ByteArray(33) { 1 }, rec.identityKeyBytes)
@@ -274,8 +281,8 @@ class DrDatabaseTest {
     fun `sessions all returns full list`() =
         runBlocking {
             val dao = db.sessions()
-            dao.upsert(SessionEntity("a", 1, ByteArray(8)))
-            dao.upsert(SessionEntity("b", 1, ByteArray(8)))
+            dao.upsert(SessionEntity(addressName = "a", deviceId = 1, sessionBytes = ByteArray(8)))
+            dao.upsert(SessionEntity(addressName = "b", deviceId = 1, sessionBytes = ByteArray(8)))
             assertEquals(2, dao.all().size)
         }
 
@@ -284,7 +291,7 @@ class DrDatabaseTest {
     fun `prekey count returns exact count`() =
         runBlocking {
             val dao = db.preKeys()
-            for (i in 1..25) dao.upsert(PreKeyEntity(i, ByteArray(32)))
+            for (i in 1..25) dao.upsert(PreKeyEntity(preKeyId = i, keyBytes = ByteArray(32)))
             assertEquals(25, dao.count())
         }
 
@@ -293,7 +300,7 @@ class DrDatabaseTest {
     fun `kyber prekey count is zero after deletion`() =
         runBlocking {
             val dao = db.kyberPreKeys()
-            dao.upsert(KyberPreKeyEntity(1, ByteArray(1568), 0L))
+            dao.upsert(KyberPreKeyEntity(kyberPreKeyId = 1, keyBytes = ByteArray(1568), timestamp = 0L))
             dao.delete(1)
             assertEquals(0, dao.count())
         }
@@ -356,7 +363,7 @@ class DrDatabaseTest {
             val due = odao.allDue(now = 1_000_000L)
             assertEquals(10, due.size)
             for (i in 0 until 9) {
-                assertTrue(due[i].nextAttemptAt <= due[i + 1].nextAttemptAt, "ASC order")
+                assertTrue("ASC order", due[i].nextAttemptAt <= due[i + 1].nextAttemptAt)
             }
         }
 
@@ -365,8 +372,8 @@ class DrDatabaseTest {
     fun `signed prekey overwrite updates timestamp`() =
         runBlocking {
             val dao = db.signedPreKeys()
-            dao.upsert(SignedPreKeyEntity(1, ByteArray(64), 1000L))
-            dao.upsert(SignedPreKeyEntity(1, ByteArray(64) { 1 }, 2000L))
+            dao.upsert(SignedPreKeyEntity(signedPreKeyId = 1, keyBytes = ByteArray(64), timestamp = 1000L))
+            dao.upsert(SignedPreKeyEntity(signedPreKeyId = 1, keyBytes = ByteArray(64) { 1 }, timestamp = 2000L))
             val rec = dao.find(1)!!
             assertEquals(2000L, rec.timestamp)
         }
@@ -398,8 +405,12 @@ class DrDatabaseTest {
     fun `identity unique index on addressName deviceId replaces on conflict`() =
         runBlocking {
             val dao = db.identities()
-            dao.upsert(IdentityEntity("alice", 1, ByteArray(33) { 1 }, "untrusted"))
-            dao.upsert(IdentityEntity("alice", 1, ByteArray(33) { 2 }, "trusted"))
+            dao.upsert(
+                IdentityEntity(addressName = "alice", deviceId = 1, identityKeyBytes = ByteArray(33) { 1 }, trustedLevel = "untrusted"),
+            )
+            dao.upsert(
+                IdentityEntity(addressName = "alice", deviceId = 1, identityKeyBytes = ByteArray(33) { 2 }, trustedLevel = "trusted"),
+            )
             val rec = dao.find("alice", 1)!!
             assertArrayEquals(ByteArray(33) { 2 }, rec.identityKeyBytes)
         }
@@ -411,7 +422,7 @@ class DrDatabaseTest {
             val odao = db.outbox()
             for (i in 1..1000) odao.insert(sampleOutbox("o$i", "QUEUED", i.toLong()))
             val due = odao.allDue(now = 10_000L)
-            assertTrue(due.size >= 500, "bulk due scan must work: ${due.size}")
+            assertTrue("bulk due scan must work: ${due.size}", due.size >= 500)
         }
 
     private fun sampleContact(hex: String) =

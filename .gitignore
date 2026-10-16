@@ -8,3 +8,4 @@ download/
 upload/
 **/build/
 drs-chat/android/.gradle/
+drs-chat/android/local.properties
