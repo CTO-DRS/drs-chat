@@ -5,6 +5,6 @@ dependencyResolutionManagement {
     repositories { mavenCentral() }
 }
 rootProject.name = "drs-chat-android-sandbox"
-include(":core:domain", ":core:protocol", ":transport:api", ":transport:websocket",
+include(":core:domain", ":core:protocol", ":core:crypto", ":transport:api", ":transport:websocket",
         ":testing:signal-sim", ":testing:e2e")
 include(":relay"); project(":relay").projectDir = file("../server/relay")

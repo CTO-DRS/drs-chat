@@ -1,5 +1,0 @@
-[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mEnvelopeCodec.kt[90m:[0m77[90m:1:[0m Exceeded max line length (140) [90m(standard:max-line-length)[0m
-[90m/home/z/my-project/drs-chat/android/core/protocol/src/main/kotlin/drs/chat/protocol/[0mInnerPayload.kt[90m:[0m42[90m:1:[0m Exceeded max line length (140) [90m(standard:max-line-length)[0m
-
-Summary error count (descending) by rule:
-  standard:max-line-length: 2
