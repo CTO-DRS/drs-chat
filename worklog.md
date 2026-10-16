@@ -97,3 +97,43 @@ Stage Summary:
 - Both fixes shipped: Fix 1 (workflow split, green-main policy, no assembleDebug) + Fix 2 (vault-guard + byte-array-key-guard, both negative-tested).
 - OTK threshold parity resolved by restoring 25 (ADR-0003 Amendment B).
 - NOT started M4 per instruction.
+
+---
+Task ID: M4a
+Agent: main (Super Z)
+Task: Module 4a — :relay implementation (the byte-pipe foundation deferred from M3). Pure JVM, fully verifiable locally. The standing "Do NOT start module 4" instruction expired at the M3 turn boundary; the new "اكمل" continuation triggers this sub-push.
+
+Work Log:
+- AUDIT: :relay module existed as a stub (build file with just kotlin.jvm+serialization+project(:core:protocol)). No source. No tests. The PLAN §4.3 had relay in M3 scope, but the user's M3 instruction explicitly cut it to :core:domain+:core:data. Relay is now M4a.
+- IMPLEMENTED :relay source (4 files, ~430 LOC):
+  * AuthChallenge.kt — verifies Ed25519 sig over AuthWire.authData(nonce, ts, x25519Pub). Checks clock skew (|now - ts| ≤ NONCE_TTL_SECONDS * 1000ms). Returns verified keyId or null on any failure. NO envelope parsing — the only crypto op the relay performs.
+  * StoreAndForwardQueue.kt — in-memory per-recipient queue. TTL sweep (default 7 days per ADR-0002). Per-recipient backpressure cap (1000 default). Dedup by messageIdHex. Phase 1: in-memory; future SQLite-backed swap is internal (interface unchanged).
+  * WireFrame.kt (object) — binary frame format: AUTH (type 0x01, length-prefixed fields), SEND (type 0x02, 4-byte envelope length for up to 64KB). buildAuth() and buildSend() helpers.
+  * RelayApp.kt — Ktor 3 Netty Application. webSocketRaw("/relay") route. Per-connection sweeper loop (60s default). Auth frame → AuthChallenge.verify → register recipientKeyId in ConnectionRegistry. SEND frame → lookup recipient → forward if online, else enqueue. SizeCap.isOversize(64KB) rejection. ConnectionRegistry (WebSocketServerSession → send as suspend, no runBlocking deadlock risk).
+- TESTS (16 total, 4 files):
+  * AuthChallengeTest (4): valid sig, bad sig (Eve forges), expired ts (skew >60s), future ts within tolerance
+  * WireFrameTest (2): buildAuth round-trip via AuthChallenge.verify, buildSend deterministic
+  * StoreAndForwardQueueTest (5): enqueue+drain, duplicate messageId dedup, sweep expired, per-recipient size cap, 64KB envelope size cap
+  * RelayIntegrationTest (5): register+get, unknown recipient returns null, unregister, send to unknown is no-op, send to registered forwards (mockk-verified)
+- DEPS: ktor-server-netty + ktor-server-websockets (impl); ktor-server-test-host + junit-jupiter + mockk + kotlinx-coroutines-test (test). BC for Ed25519 verify.
+- CI WORKFLOW: extended per per-module-push policy — :relay:test added to JVM tests step. Push policy comment expanded: M3 → M4a (current) → M4b (+ :transport:websocket) → M4c (+ :testing:e2e) → M5+ (+ assembleDebug + :app/:feature).
+- LOCAL VERIFICATION (full sweep):
+  * ktlint + detekt clean across all 5 modules (relay + 4 core)
+  * :relay:test — 16 tests, 0 failures
+  * :core:protocol:test — 42 tests ✓
+  * :core:crypto:test — 24 tests ✓
+  * :core:domain:test — 22 tests ✓
+  * :core:data:test (Robolectric) — 30 tests ✓ (debug variant)
+  * vault-guard.sh — OK
+  * byte-array-key-guard.sh — OK
+  * TOTAL UNIQUE TESTS: 134 (88 JVM + 30 Robolectric + 16 relay). Test executions across build variants: 164 (debug+release double-count for :core:data).
+
+Stage Summary:
+- M4a complete: relay foundation done. Next sub-pushes:
+  * M4b: :transport:websocket (Ktor client + TransportManagerImpl + reconnect backoff)
+  * M4c: :testing:e2e (two CryptoEngines + in-process relay → exchange messages end-to-end)
+  * M5: :app + :feature:chat (Compose UI + Hilt + foreground service) + assembleDebug enters CI
+- 152 baseline: 134 unique (88 JVM + 30 Robolectric + 16 relay). Remaining 18 tests to reach 152: :transport:websocket (target 12) + :testing:e2e (target 6).
+- CI run URL: still NOT available — no PAT in this session. Bundle produced at drs-chat-M4a-2026-10-17.bundle.
+- Honest disclosure: the full ktor-server-test-host path is intentionally NOT exercised (the registry routing is tested via mockk; the relay's main loop walks code paths already unit-tested in AuthChallenge + StoreAndForwardQueue + WireFrame). A true end-to-end Ktor test (testApplication + two clients + frame exchange) is deferred to M4c (:testing:e2e).
+- NOT started M4b/M4c/M5 — this turn's scope was M4a only.
