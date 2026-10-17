@@ -18,7 +18,7 @@ name: android
 #   3. vault-guard        — CI guard: no user-auth/biometric binding on vault key
 #   4. byte-array-key-guard — structural guard: no ByteArray-as-HashMap-key
 #                              (referential equals bug family)
-#   5. JVM tests          — :core:protocol, :core:crypto, :core:domain, :relay
+#   5. JVM tests          — :core:protocol, :core:crypto, :core:domain, :relay, :transport:websocket
 #   6. Robolectric tests  — :core:data (Room + SQLCipher + Keystore vault)
 #
 # assembleDebug is NOT in CI yet — the Android UI modules (:app, :feature:chat)
@@ -31,10 +31,20 @@ name: android
 #   M4b  = + :transport:websocket:test (Ktor client + reconnect backoff)
 #   M4c  = + :testing:e2e:test (end-to-end JVM: two CryptoEngines + in-process relay)
 #   M5+  = + assembleDebug + :app tests + :feature:chat tests
+#
+# ARCHITECTURE NOTE: this repo's git root contains the `drs-chat/` project as
+# a SUBDIRECTORY (not at the root). All `run:` step paths are relative to
+# `drs-chat/` via the job-level `defaults.run.working-directory` directive.
+# Action steps (`uses: ...`) ignore this directive; they run at the git root
+# and only matter where they read/write repo files — `actions/cache@v4` and
+# `actions/upload-artifact@v4` paths below account for that.
 jobs:
   build:
     name: ktlint + detekt + guards + tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: drs-chat
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -54,20 +64,20 @@ jobs:
       - name: Make guard scripts executable
         run: chmod +x scripts/vault-guard.sh scripts/byte-array-key-guard.sh
       - name: ktlint
-        working-directory: android
+        working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace ktlintCheck
       - name: detekt
-        working-directory: android
+        working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace detekt
       - name: vault-guard (Keystore vault policy)
         run: ./scripts/vault-guard.sh
       - name: byte-array-key-guard (ByteArray-as-key bug family)
         run: ./scripts/byte-array-key-guard.sh
       - name: JVM tests (protocol, crypto, domain, relay, transport)
-        working-directory: android
+        working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace :core:protocol:test :core:crypto:test :core:domain:test :relay:test :transport:websocket:test
       - name: Robolectric tests (data — Room + SQLCipher + vault)
-        working-directory: android
+        working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace :core:data:test
       - name: Upload test results
         if: always()
@@ -75,7 +85,7 @@ jobs:
         with:
           name: test-results
           path: |
-            android/**/build/test-results/**/*.xml
-            android/**/build/reports/**
-            scripts/
+            drs-chat/android/**/build/test-results/**/*.xml
+            drs-chat/android/**/build/reports/**
+            drs-chat/scripts/
           if-no-files-found: ignore
