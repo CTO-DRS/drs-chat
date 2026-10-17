@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Suppress("FunctionNaming") // Compose convention: PascalCase composable functions
 @Composable
 private fun DrsChatSplash() {
     Column(
