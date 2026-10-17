@@ -80,14 +80,15 @@ jobs:
       - name: Robolectric tests (data — Room + SQLCipher + vault)
         working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace :core:data:test
-      - name: Assemble packages (jar + aar)
+      - name: Assemble packages (jar + aar + apk)
         working-directory: drs-chat/android
         run: |
           ./gradlew --no-daemon --stacktrace \
             :core:protocol:jar :core:domain:jar :core:crypto:jar \
             :transport:api:jar :transport:websocket:jar \
             :relay:jar \
-            :core:data:assembleDebug
+            :core:data:assembleDebug \
+            :app:assembleDebug
       - name: Upload build packages
         if: always()
         uses: actions/upload-artifact@v4
@@ -101,6 +102,7 @@ jobs:
             drs-chat/android/transport/websocket/build/libs/*.jar
             drs-chat/server/relay/build/libs/*.jar
             drs-chat/android/core/data/build/outputs/aar/*.aar
+            drs-chat/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
       - name: Upload test results
         if: always()
