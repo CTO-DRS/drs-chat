@@ -57,9 +57,9 @@ jobs:
         run: ./scripts/vault-guard.sh
       - name: byte-array-key-guard (ByteArray-as-key bug family)
         run: ./scripts/byte-array-key-guard.sh
-      - name: JVM tests (protocol, crypto, domain, relay)
+      - name: JVM tests (protocol, crypto, domain, relay, transport)
         working-directory: android
-        run: ./gradlew --no-daemon --stacktrace :core:protocol:test :core:crypto:test :core:domain:test :relay:test
+        run: ./gradlew --no-daemon --stacktrace :core:protocol:test :core:crypto:test :core:domain:test :relay:test :transport:websocket:test
       - name: Robolectric tests (data — Room + SQLCipher + vault)
         working-directory: android
         run: ./gradlew --no-daemon --stacktrace :core:data:test

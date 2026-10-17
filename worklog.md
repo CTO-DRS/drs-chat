@@ -137,3 +137,45 @@ Stage Summary:
 - CI run URL: still NOT available — no PAT in this session. Bundle produced at drs-chat-M4a-2026-10-17.bundle.
 - Honest disclosure: the full ktor-server-test-host path is intentionally NOT exercised (the registry routing is tested via mockk; the relay's main loop walks code paths already unit-tested in AuthChallenge + StoreAndForwardQueue + WireFrame). A true end-to-end Ktor test (testApplication + two clients + frame exchange) is deferred to M4c (:testing:e2e).
 - NOT started M4b/M4c/M5 — this turn's scope was M4a only.
+
+---
+Task ID: M4b
+Agent: main (Super Z)
+Task: Module 4b — :transport:websocket (Ktor client + TransportManagerImpl + reconnect backoff). Per the documented per-module-push policy, M4b extends CI with :transport:websocket:test.
+
+Work Log:
+- 5th sandbox prune detected at session start — /tmp/jdk + /tmp/android-sdk + ~/.gradle wiped. Re-downloaded JDK 21 (Temurin) + Android cmdline-tools + platform-36 + build-tools-35.0.0. No code lost (committed).
+- IMPLEMENTED :transport:websocket source (3 files, ~290 LOC):
+  * ReconnectPolicy.kt — exponential backoff 1s → 60s cap with ±25% jitter. Overflow-safe shift (cap at MAX_SAFE_SHIFT=50 to avoid Long overflow). observeUptime(uptimeMs) resets the attempt counter if uptime >= stableUptimeMs (default 60s). reset() for explicit user-initiated reconnect.
+  * WebSocketTransport.kt — Ktor client (OkHttp engine) impl of Transport interface. webSocket() session, AUTH frame send, incoming frame loop, reconnect loop using ReconnectPolicy. linkState as MutableStateFlow<LinkState>.
+  * TransportManagerImpl.kt — aggregates ONE transport (Phase 1). Propagates transport.linkState → manager.connectionState via scope.launch { collect }. Bridges incoming TransportMessage → incomingEnvelopes (ByteArray only). send() delegates to transport.
+- TESTS (18 total, 2 files):
+  * ReconnectPolicyTest (6): first delay, exponential sequence, jitter bounds (200 samples × 6 levels = 1200 trials), reset, stable-uptime reset, short-uptime no-reset
+  * TransportManagerImplTest (12): initial state mapping, CONNECTING/UP/DOWN → Connecting/Connected/Queued, send Accepted, send Rejected, start/stop delegation, incomingEnvelopes strips wrapper (Turbine), mapLinkState exposed, sendCount increments, ReconnectPolicy integration (2 tests covering reset-after-stable + 60s cap with jitter)
+- DEPS: ktor-client-okhttp + ktor-client-websockets (impl); ktor-server-test-host + junit-jupiter + mockk + turbine (test).
+- LOCAL VERIFICATION:
+  * ktlint + detekt clean across all 6 modules (relay + transport:websocket + 4 core)
+  * :relay:test — 16 tests ✓
+  * :transport:websocket:test — 18 tests ✓
+  * :core:protocol:test — 42 tests ✓
+  * :core:crypto:test — 24 tests ✓
+  * :core:domain:test — 22 tests ✓
+  * :core:data:test (Robolectric) — 30 tests ✓ (debug variant)
+  * vault-guard.sh — OK
+  * byte-array-key-guard.sh — OK
+  * TOTAL UNIQUE TESTS: 152 — BASELINE HIT (42+24+22+30+16+18 = 152). Test executions across debug+release build variants for :core:data: 182.
+- CI WORKFLOW: extended per per-module-push policy — :transport:websocket:test added to JVM tests step. Push-policy comment now reads: M3 → M4a (relay) → M4b (transport:websocket, current) → M4c (e2e) → M5+ (assembleDebug + :app/:feature).
+- BUGS FOUND + FIXED during local verification:
+  * ReconnectPolicy nextDelay() Long-overflow — `1_000L shl 56` overflowed to negative, broke the 60s-cap test. Fixed: cap shift at MAX_SAFE_SHIFT=50 + double-check `raw < 0 || raw > maxDelayMs` → use maxDelayMs.
+  * Test #3 (jitter bounds) — original test sampled 200 calls in a row WITHOUT reset, so attempts 2..200 used different bases than the assertion expected. Fixed: instantiate fresh policy per sample, walk to target attempt level, then call once.
+  * Test #6 (short uptime no-reset) — assertion expected 4s but the next call after observeUptime advances from attempt=3 to attempt=4 (base 8s). Fixed assertion to expect 8s.
+  * detekt UnusedPrivateProperty on loop var `i` — converted for-loop to repeat().
+  * WebSocketTransport self-recursive `id` property — `private val id` + `override val id get() = this.id` was infinite recursion. Fixed: made the constructor param `override val id`.
+
+Stage Summary:
+- M4b complete. 152 BASELINE HIT — all 6 modules green locally.
+- Remaining M4c scope (:testing:e2e — two CryptoEngines + in-process relay → end-to-end message exchange) closes the "real end-to-end test" gap (not strictly required for 152, but adds the integration test layer that proves the modules work together).
+- M5: :app + :feature:chat Compose UI + Hilt + foreground service + assembleDebug in CI.
+- CI run URL: still NOT available — no PAT in this session. Bundle produced at drs-chat-M4b-2026-10-17.bundle.
+- Honest disclosure: WebSocketTransport source is provided but NOT directly unit-tested — it requires a live Ktor server (the relay) to exercise the WS handshake + reconnect loop. The ReconnectPolicy + TransportManagerImpl layers below it ARE unit-tested (24 tests combined). Full end-to-end coverage of WebSocketTransport happens in M4c (:testing:e2e) against the real :relay.
+- NOT started M4c/M5 — this turn's scope was M4b only.
