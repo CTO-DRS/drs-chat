@@ -30,7 +30,8 @@ name: android
 #   M4a  = + :relay:test (relay integration tests)
 #   M4b  = + :transport:websocket:test (Ktor client + reconnect backoff)
 #   M4c  = + :testing:e2e:test (end-to-end JVM: two CryptoEngines + in-process relay)
-#   M5+  = + assembleDebug + :app tests + :feature:chat tests
+#   pkg  = + assemble packages (6 JVM jars + 1 Android aar) uploaded as artifact
+#   M5+  = + assembleDebug (for :app/:feature:chat Android UI) + :app/:feature tests
 #
 # ARCHITECTURE NOTE: this repo's git root contains the `drs-chat/` project as
 # a SUBDIRECTORY (not at the root). All `run:` step paths are relative to
@@ -79,6 +80,28 @@ jobs:
       - name: Robolectric tests (data — Room + SQLCipher + vault)
         working-directory: drs-chat/android
         run: ./gradlew --no-daemon --stacktrace :core:data:test
+      - name: Assemble packages (jar + aar)
+        working-directory: drs-chat/android
+        run: |
+          ./gradlew --no-daemon --stacktrace \
+            :core:protocol:jar :core:domain:jar :core:crypto:jar \
+            :transport:api:jar :transport:websocket:jar \
+            :relay:jar \
+            :core:data:assembleDebug
+      - name: Upload build packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-packages
+          path: |
+            drs-chat/android/core/protocol/build/libs/*.jar
+            drs-chat/android/core/domain/build/libs/*.jar
+            drs-chat/android/core/crypto/build/libs/*.jar
+            drs-chat/android/transport/api/build/libs/*.jar
+            drs-chat/android/transport/websocket/build/libs/*.jar
+            drs-chat/server/relay/build/libs/*.jar
+            drs-chat/android/core/data/build/outputs/aar/*.aar
+          if-no-files-found: error
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
