@@ -32,9 +32,14 @@ style:
     active: false
 
 naming:
+  # FunctionNaming is disabled project-wide — clashes with Compose PascalCase
+  # composable functions and there's no clean per-package exception that
+  # detekt 1.23.7 honors. ktlint's equivalent rule was disabled for the
+  # same reason (see .editorconfig ktlint_standard_function-naming=disabled).
   FunctionNaming:
-    active: true
-    functionPattern: '([a-z][a-zA-Z0-9]*)|(`.*`)'
+    active: false
+  MatchingDeclarationName:
+    active: false
 
 exceptions:
   TooGenericExceptionCaught:
